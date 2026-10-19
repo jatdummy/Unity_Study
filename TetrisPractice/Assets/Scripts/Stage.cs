@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Stage : MonoBehaviour
 {
@@ -29,6 +30,18 @@ public class Stage : MonoBehaviour
         nextFallTime = Time.time + fallCycle;
 
         CreateBackgorund(); // 배경 만들기
+
+        // 높이만큼 행 노드 만들기
+        for (int i =0; i< boardHeight; ++i)
+        {
+            // ToString을 이용하여 오브젝트 이름 설정
+            var col = new GameObject((boardHeight - i - 1).ToString());
+            // 위치 설정 >> 행 위치의 높이, 가로 중앙으로
+            col.transform.position = new Vector3(0, halfHeight - i, 0);
+            // 보드 노드의 자식으로 설정
+            col.transform.parent = boardNode;
+        }
+
         CreateTetris(); //테트리스 생성
     }
 
@@ -45,7 +58,7 @@ public class Stage : MonoBehaviour
         {
             moveDir.x = 1;
         }
-        
+
         if (Input.GetKeyDown(KeyCode.W))
         {
             isRotate = true;
@@ -55,6 +68,24 @@ public class Stage : MonoBehaviour
             moveDir.y = -1;
         }
 
+        // 바닥에 닿을 때까지 이동
+        if (Input.GetKeyDown(KeyCode.Space))
+        { 
+            while (MoveTetris(Vector3.down, false))
+            {
+
+            }
+        }
+
+        // 씬을 다시 불러와 재시작
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        if (Time.time > nextFallTime)
+
+        // 아래로 떨어지면 강제 이동
         if (moveDir != Vector3.zero || isRotate)
         {
             MoveTetris(moveDir, isRotate);
@@ -73,20 +104,87 @@ public class Stage : MonoBehaviour
         {
             MoveTetris(moveDir, isRotate);
         }
+        
 
     }
 
     bool MoveTetris(Vector3 moveDir, bool isRotate)
     {
+        // 이동, 회전 불가시 돌아가기 위한 값 저장
+        Vector3 oldPos = tetrisNode.transform.position;
+        Quaternion oldRot = tetrisNode.transform.rotation;
 
+        // 이동, 회전
         tetrisNode.transform.position += moveDir;
         if (isRotate)
         {
-            // 현재 테트리스 노드에 90도 회전 +
+            // 현재 테트리스 노드에 90도 회전 더하기
             tetrisNode.transform.rotation *= Quaternion.Euler(0, 0, 90);
+        }
+
+        // 이동 불가시 이전 위치, 회전 으로 돌아가기
+        if (!CanMoveTo(tetrisNode))
+        {
+            tetrisNode.transform.position = oldPos;
+            tetrisNode.transform.rotation = oldRot;
+
+            if ((int)moveDir.y == -1 && (int)moveDir.x ==0 && isRotate == false)
+            {
+                AddToBoard(tetrisNode);
+                CheckBoardColumn();
+                CreateTetris();
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // 테트리스노드 보드에 추가
+    void AddToBoard(Transform root) // 매개변수 root로 가져오기
+    {
+        while (root.childCount > 0)
+        {
+            var node = root.GetChild(0);
+
+            // 유니티 좌표에서 테트리스 좌표로 변환
+            int x = Mathf.RoundToInt(node.transform.position.x + halfWidth);
+            int y = Mathf.RoundToInt(node.transform.position.y + halfHeight - 1);
+
+            // 부모노드 : 행 노드(y 위치), 오브젝트 이름 : x 위치
+            node.parent = boardNode.Find(y.ToString());
+            node.name = x.ToString();
+
+        }
+    }
+    bool CanMoveTo(Transform root)
+    {
+
+        // Tetrisnode 자식 타일 모두 검사
+        for (int i = 0; i < root.childCount; i++)
+        {
+            var node = root.GetChild(i);
+
+            // 유니티 좌표에서 테트리스 좌표로 변환
+            int x = Mathf.RoundToInt(node.transform.position.x + halfWidth);
+            int y = Mathf.RoundToInt(node.transform.position.y + halfHeight - 1);
+
+            // 이동 가능한 좌표인지 확인 후 변환
+            if (x < 0 || x > boardWidth - 1)
+                return false;
+            if (y < 0)
+                return false;
+
+            // 이미 다른 타일이 있는지 확인
+            var column = boardNode.Find(y.ToString());
+
+            if (column != null && column.Find(x.ToString()) != null)
+                return false;
         }
         return true;
     }
+
 
     // 타일 생성
     Tile CreateTile(Transform parent, Vector2 position, Color color, int order = 1)
@@ -133,6 +231,71 @@ public class Stage : MonoBehaviour
         }
     }
 
+    void CheckBoardColumn()
+    {
+        bool isCleared = false;
+
+        // 완성된 행 == 행의 자식 갯수가 가로 크기
+        foreach (Transform column in boardNode)
+        {
+            if (column.childCount == boardWidth)
+            {
+                // 행의 모든 자식 삭제
+                foreach (Transform tile in column)
+                {
+                    Destroy(tile.gameObject);
+                }
+                // 행의 모든 자식들과 연결 끊기
+                column.DetachChildren();
+                isCleared = true;
+            }
+        }
+
+        // 비어 있는 행이 존재하면 아래로 내리기
+        if (isCleared)
+        {
+            // 바닥 행은 안내리기 위해 1부터 시작
+            for (int i = 1; i < boardNode.childCount; ++i)
+            {
+                var column = boardNode.Find(i.ToString());
+
+                // 이미 비어 있는 행은 무시함
+                if (column.childCount == 0)
+                    continue;
+
+                // 현재 행 아래쪽에 빈 행이 존재하는가? 빈 행만큼 emptyCol 증가
+                int emptyCol = 0;
+                int j = i - 1;
+                while (j >= 0)
+                {
+                    if (boardNode.Find(j.ToString()).childCount == 0)
+                    {
+                        emptyCol++;
+                    }
+                    j--;
+                }
+
+                // 현재 행 아래쪽에 빈 행이 존재시 아래로 내리기
+                if (emptyCol > 0)
+                {
+                    var targetColumn = boardNode.Find((i - emptyCol).ToString());
+
+                    while (column.childCount > 0)
+                    {
+                        Transform tile = column.GetChild(0);
+                        tile.parent = targetColumn;
+                        tile.transform.position += new Vector3(0, -emptyCol, 0);
+
+                    }
+                    column.DetachChildren();
+
+                }
+
+            }
+
+
+        }
+    }
     void CreateTetris()
     {
         int index = Random.Range(0, 7); // 랜덤으로 0~6 사이의 값
@@ -201,8 +364,7 @@ public class Stage : MonoBehaviour
                 CreateTile(tetrisNode, new Vector2(0f, 0f), color);
                 CreateTile(tetrisNode, new Vector2(1f, 0f), color);
                 break;
-
-
         }
+
     }
 }
