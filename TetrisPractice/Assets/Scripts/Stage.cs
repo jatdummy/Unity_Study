@@ -3,10 +3,12 @@ using UnityEngine.SceneManagement;
 
 public class Stage : MonoBehaviour
 {
+    [Header("Source")]
     public GameObject tilePrefab;
     public Transform backgroundNode;
     public Transform boardNode;
     public Transform tetrisNode;
+    public GameObject gameoverPanel;
 
     //높이 설정
     public int boardWidth = 10;
@@ -24,6 +26,9 @@ public class Stage : MonoBehaviour
 
     private void Start()
     {
+        // 게임 시작시 게임오버 패널 off
+        gameoverPanel.SetActive(false);
+
         halfWidth = Mathf.RoundToInt(boardWidth * 0.5f); // 너비의 중간값 설정
         halfHeight = Mathf.RoundToInt(boardHeight * 0.5f); // 높이의 중간값 설정
 
@@ -47,64 +52,73 @@ public class Stage : MonoBehaviour
 
     private void Update()
     {
-        Vector3 moveDir = Vector3.zero; // 이동 저장
-        bool isRotate = false; // 회전 저장
-
-        if (Input.GetKeyDown(KeyCode.A))
+        if (gameoverPanel.activeSelf)
         {
-            moveDir.x = -1;
-        }
-        else if (Input.GetKeyDown(KeyCode.D))
-        {
-            moveDir.x = 1;
-        }
-
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            isRotate = true;
-        }
-        else if (Input.GetKeyDown(KeyCode.S))
-        {
-            moveDir.y = -1;
-        }
-
-        // 바닥에 닿을 때까지 이동
-        if (Input.GetKeyDown(KeyCode.Space))
-        { 
-            while (MoveTetris(Vector3.down, false))
+            if (Input.GetKeyDown(KeyCode.R))
             {
-
+                SceneManager.LoadScene(0);
             }
         }
-
-        // 씬을 다시 불러와 재시작
-        if (Input.GetKeyDown(KeyCode.R))
+        else
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
+            Vector3 moveDir = Vector3.zero; // 이동 저장
+            bool isRotate = false; // 회전 저장
 
-        if (Time.time > nextFallTime)
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                moveDir.x = -1;
+            }
+            else if (Input.GetKeyDown(KeyCode.D))
+            {
+                moveDir.x = 1;
+            }
 
-        // 아래로 떨어지면 강제 이동
-        if (moveDir != Vector3.zero || isRotate)
-        {
-            MoveTetris(moveDir, isRotate);
-        }
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                isRotate = true;
+            }
+            else if (Input.GetKeyDown(KeyCode.S))
+            {
+                moveDir.y = -1;
+            }
 
-        // 아래로 떨어지는건 강제로 이동
-        if (Time.time > nextFallTime)
-        {
-            nextFallTime = Time.time + fallCycle; // 다음 노드 떨어질 시간 재설정
-            moveDir.y = -1; //아래로 한 칸 이동
-            isRotate = false; // 강제 이동시 회전 없음
-        }
+            // 바닥에 닿을 때까지 이동
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                while (MoveTetris(Vector3.down, false))
+                {
 
-        // 아무런 입력이 없을 시 테트리스 노드 움직이지 않음.
-        if (moveDir != Vector3.zero || isRotate)
-        {
-            MoveTetris(moveDir, isRotate);
+                }
+            }
+
+            // 씬을 다시 불러와 재시작
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+
+            if (Time.time > nextFallTime)
+
+                // 아래로 떨어지면 강제 이동
+                if (moveDir != Vector3.zero || isRotate)
+                {
+                    MoveTetris(moveDir, isRotate);
+                }
+
+            // 아래로 떨어지는건 강제로 이동
+            if (Time.time > nextFallTime)
+            {
+                nextFallTime = Time.time + fallCycle; // 다음 노드 떨어질 시간 재설정
+                moveDir.y = -1; //아래로 한 칸 이동
+                isRotate = false; // 강제 이동시 회전 없음
+            }
+
+            // 아무런 입력이 없을 시 테트리스 노드 움직이지 않음.
+            if (moveDir != Vector3.zero || isRotate)
+            {
+                MoveTetris(moveDir, isRotate);
+            }
         }
-        
 
     }
 
@@ -133,6 +147,12 @@ public class Stage : MonoBehaviour
                 AddToBoard(tetrisNode);
                 CheckBoardColumn();
                 CreateTetris();
+            }
+
+            // 노드 추가 직후 움직일 수 있는가?
+            if (!CanMoveTo(tetrisNode))
+            {
+                gameoverPanel.SetActive(true);
             }
 
             return false;
