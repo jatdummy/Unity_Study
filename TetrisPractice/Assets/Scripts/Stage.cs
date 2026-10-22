@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.AI;
+using TMPro;
 
 public class Stage : MonoBehaviour
 {
@@ -9,6 +11,10 @@ public class Stage : MonoBehaviour
     public Transform boardNode;
     public Transform tetrisNode;
     public GameObject gameoverPanel;
+
+    public TextMeshProUGUI score;
+    public TextMeshProUGUI level;
+    public TextMeshProUGUI line;
 
     //높이 설정
     public int boardWidth = 10;
@@ -24,8 +30,20 @@ public class Stage : MonoBehaviour
     private int halfWidth;
     private int halfHeight;
 
+
+    // UI 관련 설정들
+    private int scoreVal = 0;
+    private int levelVal = 1;
+    private int lineVal; 
     private void Start()
     {
+        // 게임 시작시 UI 텍스트 설정
+        lineVal = levelVal * 2;
+        score.text = "" + scoreVal;
+        level.text = "" + levelVal;
+        line.text = "" + lineVal;
+
+
         // 게임 시작시 게임오버 패널 off
         gameoverPanel.SetActive(false);
 
@@ -255,6 +273,8 @@ public class Stage : MonoBehaviour
     {
         bool isCleared = false;
 
+        // 한번에 사라질 행 갯수 확인
+        int linecount = 0;
         // 완성된 행 == 행의 자식 갯수가 가로 크기
         foreach (Transform column in boardNode)
         {
@@ -268,7 +288,14 @@ public class Stage : MonoBehaviour
                 // 행의 모든 자식들과 연결 끊기
                 column.DetachChildren();
                 isCleared = true;
+                linecount++; // 완성된 행 하나당 linecount 증가
             }
+        }
+        // 완성된 행이 있을 경우 점수 추가
+        if (linecount != 0)
+        {
+            scoreVal += linecount * linecount * 100;
+            score.text = " " + scoreVal;
         }
 
         // 비어 있는 행이 존재하면 아래로 내리기
