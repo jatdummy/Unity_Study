@@ -32,7 +32,7 @@ public class Stage : MonoBehaviour
 
 
     // UI 관련 설정들
-    private int scoreVal = 0;
+    private int scoreVal = (0);
     private int levelVal = 1;
     private int lineVal; 
     private void Start()
@@ -295,7 +295,22 @@ public class Stage : MonoBehaviour
         if (linecount != 0)
         {
             scoreVal += linecount * linecount * 100;
-            score.text = " " + scoreVal;
+            score.text = "  " + scoreVal;
+        }
+
+        // 완성된 행이 있을경우 남은라인 감소시키기
+        if (linecount != 0)
+        {
+            lineVal -= linecount;
+            // 레벨업까지 필요한 라인에 도달했을 시 (최대 레벨 10)
+            if (lineVal <= 0 && levelVal <= 10)
+            {
+                levelVal += 1; // 레벨 업!
+                lineVal = levelVal * 2 + lineVal; // 남은 라인 갱신
+                fallCycle = 0.1f * (10 - levelVal); // 속도 증가
+            }
+            level.text = " " + levelVal;
+            line.text = " " + lineVal;
         }
 
         // 비어 있는 행이 존재하면 아래로 내리기
