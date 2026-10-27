@@ -10,6 +10,7 @@ public class Stage : MonoBehaviour
     public Transform backgroundNode;
     public Transform boardNode;
     public Transform tetrisNode;
+    public Transform previewNode;
     public GameObject gameoverPanel;
 
     public TextMeshProUGUI score;
@@ -34,7 +35,8 @@ public class Stage : MonoBehaviour
     // UI 관련 설정들
     private int scoreVal = (0);
     private int levelVal = 1;
-    private int lineVal; 
+    private int lineVal;
+    private int indexVal = -1;
     private void Start()
     {
         // 게임 시작시 UI 텍스트 설정
@@ -358,9 +360,89 @@ public class Stage : MonoBehaviour
 
         }
     }
+    void CreatePreview()
+    {
+        // 이미 있는 미리보기 삭제
+        foreach (Transform tile in previewNode)
+        {
+            Destroy(tile.gameObject);
+        }
+        previewNode.DetachChildren();
+
+        indexVal = Random.Range(0, 7);
+
+        Color32 color = Color.white;
+        // 미리보기 블럭 생성 위치(우상단으로)
+        previewNode.position = new Vector2(halfWidth + 5, halfHeight - 1);
+
+        switch (indexVal)
+        {
+            case 0: // I
+                color = new Color32(115, 251, 253, 255);    // 하늘색
+                CreateTile(previewNode, new Vector2(-2f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                break;
+
+            case 1: // J
+                color = new Color32(0, 33, 245, 255);    // 파란색
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(-1f, 1.0f), color);
+                break;
+
+            case 2: // L
+                color = new Color32(243, 168, 59, 255);    // 주황색
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 1.0f), color);
+                break;
+
+            case 3: // O 
+                color = new Color32(255, 253, 84, 255);    // 노란색
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 1f), color);
+                CreateTile(previewNode, new Vector2(1f, 1f), color);
+                break;
+
+            case 4: //  S
+                color = new Color32(117, 250, 76, 255);    // 녹색
+                CreateTile(previewNode, new Vector2(-1f, -1f), color);
+                CreateTile(previewNode, new Vector2(0f, -1f), color);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                break;
+
+            case 5: //  T
+                color = new Color32(155, 47, 246, 255);    // 자주색
+                CreateTile(previewNode, new Vector2(-1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 1f), color);
+                break;
+
+            case 6: // Z
+                color = new Color32(235, 51, 35, 255);    // 빨간색
+                CreateTile(previewNode, new Vector2(-1f, 1f), color);
+                CreateTile(previewNode, new Vector2(0f, 1f), color);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                break;
+        }
+    }
+
     void CreateTetris()
     {
-        int index = Random.Range(0, 7); // 랜덤으로 0~6 사이의 값
+        int index;
+        if (indexVal == -1)
+        {
+            index = Random.Range(0, 7); // 랜덤으로 0~6 사이의 값
+        }
+        else index = indexVal; // preview의 값 가져오기
 
         Color32 color = Color.white;
 
@@ -428,5 +510,7 @@ public class Stage : MonoBehaviour
                 break;
         }
 
+        // 미리보기 실행.
+        CreatePreview();
     }
 }
