@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.AI;
 using TMPro;
 
 public class Stage : MonoBehaviour
@@ -116,14 +115,6 @@ public class Stage : MonoBehaviour
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
-
-            if (Time.time > nextFallTime)
-
-                // 아래로 떨어지면 강제 이동
-                if (moveDir != Vector3.zero || isRotate)
-                {
-                    MoveTetris(moveDir, isRotate);
-                }
 
             // 아래로 떨어지는건 강제로 이동
             if (Time.time > nextFallTime)
@@ -250,7 +241,7 @@ public class Stage : MonoBehaviour
         color.a = 0.5f; // 테두리와 구분 위해 투명도 바꾸기
         for (int x = -halfWidth; x < halfWidth; x++)
         {
-            for (int y = -halfHeight; y > -halfHeight; --y)
+            for (int y = halfHeight; y > -halfHeight; --y)
             {
                 CreateTile(backgroundNode, new Vector2(x, y), color, 0);
             }
@@ -309,12 +300,11 @@ public class Stage : MonoBehaviour
             {
                 levelVal += 1; // 레벨 업!
                 lineVal = levelVal * 2 + lineVal; // 남은 라인 갱신
-                fallCycle = 0.1f * (10 - levelVal); // 속도 증가
+                fallCycle = 0.1f * (11 - levelVal); // 속도 증가
             }
             level.text = " " + levelVal;
             line.text = " " + lineVal;
-        }
-
+        } 
         // 비어 있는 행이 존재하면 아래로 내리기
         if (isCleared)
         {
