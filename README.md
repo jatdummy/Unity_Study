@@ -1,7 +1,7 @@
 # Unity_Study
 
 수업 외에 개인적으로 따라 만들어 보며 공부한 Unity 프로젝트 모음입니다.  
-자세한 내용은 [velog]([https://velog.io/@ewq44/posts](https://velog.io/@ewq44/series/%EC%9C%A0%EB%8B%88%ED%8B%B0-%EA%B0%9C%EC%9D%B8-%EA%B3%B5%EB%B6%80))에 정리하고 있습니다.
+자세한 내용은 [학습 기록 Velog](https://velog.io/@ewq44/series/%EC%9C%A0%EB%8B%88%ED%8B%B0-%EA%B0%9C%EC%9D%B8-%EA%B3%B5%EB%B6%80)에 정리하고 있습니다.
 
 ---
 
